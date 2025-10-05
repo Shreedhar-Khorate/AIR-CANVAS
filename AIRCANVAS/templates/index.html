@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Air Canvas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --success-color: #28a745;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f5f7fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .control-panel {
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .panel-title {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            color: var(--secondary-color);
+        }
+        
+        .panel-title i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        .eraser-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+            display: none;
+        }
+        
+        .black-bg .eraser-info {
+            display: block;
+            color: #fff;
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--secondary-color);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #e0e0e0;
+            border-radius: 5px;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .color-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #eee;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            position: relative;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-option.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 2px white, 0 0 0 4px var(--primary-color);
+        }
+        
+        .color-option.eraser::after {
+            content: "✏️";
+        }
+        
+        .brush-size-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            font-family: inherit;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn i {
+            margin-right: 8px;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .window {
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+        
+        .window-header {
+            padding: 15px 20px;
+            background-color: var(--light-color);
+            border-bottom: 1px solid #eee;
+            font-weight: 500;
+        }
+        
+        .window-content {
+            padding: 10px;
+        }
+        
+        .window-content img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 5px;
+        }
+        
+        .canvas-colors {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .canvas-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #eee;
+        }
+        
+        .canvas-color.selected {
+            border: 2px solid var(--primary-color);
+        }
+        
+        .share-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal-body {
+            margin-bottom: 15px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .share-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .share-link {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .control-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Virtual Air Canvas</h1>
+            <p>Draw in the air with your fingers</p>
+        </header>
+        
+        <div class="control-panel">
+            <div class="panel-title">
+                <i class="fas fa-sliders-h"></i>
+                <h2>Drawing Controls</h2>
+            </div>
+            
+            <div class="control-grid">
+                <div class="control-group">
+                    <label for="brushSize">Brush Size: <span id="brushSizeValue">5</span></label>
+                    <input type="range" id="brushSize" min="1" max="30" value="5" oninput="updateBrushSize()">
+                    <div class="color-options" style="margin-top: 10px;">
+                        <div class="brush-size-preview" id="brushSizePreview" style="width: 30px; height: 30px; background-color: blue;"></div>
+                        <span style="margin-left: 10px;">Preview</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Brush Color:</label>
+                    <div class="color-options">
+                        <div class="color-option selected" style="background-color: blue;" onclick="setColor(0)" title="Blue"></div>
+                        <div class="color-option" style="background-color: green;" onclick="setColor(1)" title="Green"></div>
+                        <div class="color-option" style="background-color: red;" onclick="setColor(2)" title="Red"></div>
+                        <div class="color-option" style="background-color: yellow; color: black;" onclick="setColor(3)" title="Yellow"></div>
+                        <div class="color-option eraser" style="background-color: white; color: black;" onclick="setColor(4)" title="Eraser"></div>
+                    </div>
+                    <div class="eraser-info" id="eraserInfo">
+                        <i class="fas fa-info-circle"></i> Eraser will reveal black background
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label>Canvas Color:</label>
+                    <div class="canvas-colors">
+                        <div class="canvas-color selected" style="background-color: white;" onclick="setCanvasColor([255, 255, 255])" title="White"></div>
+                        <div class="canvas-color" style="background-color: black;" onclick="setCanvasColor([0, 0, 0])" title="Black"></div>
+                        <div class="canvas-color" style="background-color: #f0f0f0;" onclick="setCanvasColor([240, 240, 240])" title="Light Gray"></div>
+                        <div class="canvas-color" style="background-color: #333333;" onclick="setCanvasColor([51, 51, 51])" title="Dark Gray"></div>
+                        <div class="canvas-color" style="background-color: #fff8e1;" onclick="setCanvasColor([255, 248, 225])" title="Parchment"></div>
+                    </div>
+                </div>
+                <div class="control-group" style="display: flex; align-items: flex-end; gap: 10px;">
+                    <button class="btn" onclick="clearCanvas()">
+                        <i class="fas fa-trash-alt"></i>
+                        Clear
+                    </button>
+                    <button class="btn btn-success" onclick="shareSketch()">
+                        <i class="fas fa-share-alt"></i>
+                        Share
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="window">
+            <div class="window-header">
+                <i class="fas fa-video"></i> Webcam Feed with Drawing
+            </div>
+            <div class="window-content">
+                <img src="/video_feed" alt="Webcam Feed">
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="share-modal" id="shareModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Share Your Sketch</h3>
+                <button class="close-btn" onclick="closeShareModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Your sketch has been saved. You can share it using the link below:</p>
+                <input type="text" class="share-link" id="shareLink" readonly>
+                <div class="share-options">
+                    <button class="btn" onclick="copyShareLink()">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                    <button class="btn btn-success" onclick="downloadSketch()">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentColorIndex = 0;
+        const colorValues = ['blue', 'green', 'red', 'yellow', 'white'];
+        
+        // Update brush size display
+        function updateBrushSize() {
+            const size = document.getElementById('brushSize').value;
+            document.getElementById('brushSizeValue').textContent = size;
+            
+            // Update brush size preview
+            const preview = document.getElementById('brushSizePreview');
+            preview.style.width = `${size}px`;
+            preview.style.height = `${size}px`;
+            
+            setBrushSize();
+        }
+        
+        function setColor(index) {
+            currentColorIndex = index;
+            // Update UI
+            document.querySelectorAll('.color-option').forEach((el, i) => {
+                if (i === index) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+            
+            // Update brush preview color
+            const preview = document.getElementById('brushSizePreview');
+            preview.style.backgroundColor = colorValues[index];
+            
+            // Send to server
+            fetch('/set_color', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ colorIndex: index })
+            });
+        }
+        function setCanvasColor(color) {
+            // Update UI
+            document.querySelectorAll('.canvas-color').forEach((el) => {
+                const bgColor = el.style.backgroundColor;
+                const rgb = hexToRgb(bgColor);
+                if (rgb && rgb.r === color[0] && rgb.g === color[1] && rgb.b === color[2]) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+            
+            // Toggle black background class
+            if (color[0] === 0 && color[1] === 0 && color[2] === 0) {
+                document.body.classList.add('black-bg');
+            } else {
+                document.body.classList.remove('black-bg');
+            }
+            
+            // Send to server
+            fetch('/set_canvas_color', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ canvasColor: color })
+            });
+        }
+
+        function setBrushSize() {
+            const size = document.getElementById('brushSize').value;
+            fetch('/set_brush_size', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ brushSize: size })
+            });
+        }
+
+        function clearCanvas() {
+            if (confirm('Are you sure you want to clear the canvas?')) {
+                fetch('/clear_canvas', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+        }
+
+        function shareSketch() {
+            // Show loading state
+            const shareBtn = document.querySelector('.btn-success');
+            const originalText = shareBtn.innerHTML;
+            shareBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            
+            // Save the canvas and get the URL
+            fetch('/save_canvas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update the share link
+                    const fullUrl = window.location.origin + data.sketch_url;
+                    document.getElementById('shareLink').value = fullUrl;
+                    
+                    // Show the modal
+                    document.getElementById('shareModal').style.display = 'flex';
+                }
+            })
+            .finally(() => {
+                // Restore button state
+                shareBtn.innerHTML = originalText;
+            });
+        }
+
+        function closeShareModal() {
+            document.getElementById('shareModal').style.display = 'none';
+        }
+
+        function copyShareLink() {
+            const shareLink = document.getElementById('shareLink');
+            shareLink.select();
+            document.execCommand('copy');
+            
+            // Show copied message
+            const copyBtn = document.querySelector('.btn:not(.btn-success)');
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        }
+
+        function downloadSketch() {
+            const shareLink = document.getElementById('shareLink').value;
+            const link = document.createElement('a');
+            link.href = shareLink;
+            link.download = 'my_sketch.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function hexToRgb(hex) {
+            // Handle color names like 'white', 'black', etc.
+            if (!hex.startsWith('#')) {
+                const temp = document.createElement('div');
+                temp.style.color = hex;
+                document.body.appendChild(temp);
+                const rgb = getComputedStyle(temp).color;
+                document.body.removeChild(temp);
+                
+                const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+                if (match) {
+                    return {
+                        r: parseInt(match[1]),
+                        g: parseInt(match[2]),
+                        b: parseInt(match[3])
+                    };
+                }
+                return null;
+            }
+            
+            const bigint = parseInt(hex.replace("#", ""), 16);
+            return {
+                r: (bigint >> 16) & 255,
+                g: (bigint >> 8) & 255,
+                b: bigint & 255
+            };
+        }
+
+        // Initialize
+        updateBrushSize();
+    </script>
+</body>
+</html>
