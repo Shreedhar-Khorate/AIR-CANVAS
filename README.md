@@ -37,13 +37,10 @@
    git clone https://github.com/Shreedhar-Khorate/AIR-CANVAS.git
    cd air-canvas
  ```
-Install dependencies:
+2.Install dependencies
 
-  ```bash
 
-pip install -r requirements.txt
- ```
-Run the Flask app:
+3.Run the Flask app:
 
  ```bash
 
